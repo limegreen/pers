@@ -1,0 +1,56 @@
+---
+title: "Personality preliminary data checking"
+output: html_notebook
+date: "11 Sept 2017"
+---
+
+```{r}
+require(tidyverse)
+
+load("pers.Rdata")
+```
+
+Remove my preview tests (n=5)
+
+```{r}
+pers <- filter(pers, distributionchannel != "preview")
+```
+
+Starting with n  = 660 participants
+Check for and remove non-consenting participants. Initial consent (Q4) 1 = Yes, 2 = Full info sheet 3 = No
+Full info sheet (Q19) 1 = Yes, 2 = No
+
+```{r}
+table(pers$q4, useNA="ifany") #647 yes, 5 no, 8 full info, 1 NA
+table(pers$q19, useNA="ifany") #7 further yes
+
+pers <- filter(pers, q4==1|q19==1)
+```
+
+Now n=654
+
+Looking at completion through to the end of the standardised questionnaires (Q20_28)
+
+```{r}
+table(is.na(pers$q20_28))
+
+pers <- filter(pers, q20_28>0)
+```
+
+186 not completed, leaving n = 468.
+
+Check for extreme times
+
+```{r}
+ggplot(pers, aes(`duration (in seconds)`)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(0,1200))
+
+#zoom in on the super short
+ggplot(pers, aes(`duration (in seconds)`)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(0,250))
+```
+
+
+Shortest finisher still took over a minute, so while fast, probably OK.
