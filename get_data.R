@@ -8,7 +8,11 @@ pharm.headers <-  read.csv("~/personality/pers analysis/Processing and Analysis/
 pharm <- read_csv("~/personality/pers analysis/Processing and Analysis/pers/pharm pers 11 sept 2017 num.csv", skip = 3,
                   col_names = as.character(pharm.headers)) %>%
   select(-IPAddress, -RecipientLastName, -RecipientFirstName, -RecipientEmail, -LocationLatitude, -LocationLongitude) %>%
-  mutate(pharm = "pharm")
+  mutate(pharm = "pharm") 
+
+#fix question numbering issue
+names(pharm) <- gsub("q4_", "q22_", names(pharm))
+names(pharm) <- gsub("q5_", "q20_", names(pharm))
 
 #read in questions for headers (line 2)
 np.headers <-  read.csv("~/personality/pers analysis/Processing and Analysis/pers/np pers 11 sept 2017 num.csv", 
