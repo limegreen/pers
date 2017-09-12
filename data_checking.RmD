@@ -17,14 +17,14 @@ pers <- filter(pers, distributionchannel != "preview")
 ```
 
 Starting with n  = 660 participants
-Check for and remove non-consenting participants. Initial consent (Q4) 1 = Yes, 2 = Full info sheet 3 = No
+Check for and remove non-consenting participants. Initial consent (Q4/consent) 1 = Yes, 2 = Full info sheet 3 = No
 Full info sheet (Q19) 1 = Yes, 2 = No
 
 ```{r}
-table(pers$q4, useNA="ifany") #647 yes, 5 no, 8 full info, 1 NA
+table(pers$consent, useNA="ifany") #647 yes, 5 no, 8 full info, 1 NA
 table(pers$q19, useNA="ifany") #7 further yes
 
-pers <- filter(pers, q4==1|q19==1)
+pers <- filter(pers, consent==1|q19==1)
 ```
 
 Now n=654
@@ -37,7 +37,7 @@ table(is.na(pers$q20_28))
 pers <- filter(pers, q20_28>0)
 ```
 
-186 not completed, leaving n = 468.
+89 not completed, leaving n = 565.
 
 Check for extreme times
 
@@ -54,3 +54,9 @@ ggplot(pers, aes(`duration (in seconds)`)) +
 
 
 Shortest finisher still took over a minute, so while fast, probably OK.
+
+#save file for psychometrics
+```{r}
+save(pers, file="pers2.Rdata")
+```
+
