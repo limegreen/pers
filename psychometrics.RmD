@@ -1,0 +1,228 @@
+---
+title: "Psychometrics"
+output:
+  word_document: default
+  html_notebook: default
+date: "12 Sept 2017"
+---
+
+```{r}
+require(tidyverse)
+require(lavaan)
+require(userfriendlyscience)
+require(psych)
+
+load("pers2.Rdata")
+
+#reverse AGQ-R questions so that higher numbers indicate stronger agreement
+pers <- mutate_at(pers, vars(q5_1:q5_12), ~6-.)
+
+#reverse BFI questions so that higher numbers indicate stronger agreement (then reverse code several)
+pers <- mutate_at(pers, vars(q22_45:q22_59), ~15-.) %>%
+  mutate(q22_47 = 8-q22_47, q22_50 = 8-q22_50, q22_54 = 8-q22_54, q22_58 = 8-q22_58)
+
+#reverse REI questions so that higher numbers indicate stronger agreement (except for first two items 19 & 20 which are reversed)
+pers <- mutate_at(pers, vars(q20_21:q20_28), ~6-.) %>%
+  mutate(q20_23 = 6 - q20_23)
+
+#reverse CRO questions so that higher numbers indicate stronger agreement
+pers <- mutate_at(pers, vars(q36_1:q36_8), ~8-.) 
+
+#reverse pharmacist attitude variables so that higher numbers are pro pharmacist role
+pers <- mutate_at(pers, vars(q37_1:q37_10), ~4-.)
+
+#calculate new variables
+# pers <- mutate(pers, mastery_approach = (q5_1 + q5_3 + q5_7) / 3, mastery_avoidance = (q5_5 + q5_9 + q5_11) / 3, 
+#                performance_approach = (q5_2 + q5_4 + q5_8) / 3, performance_avoidance = (q5_6 + q5_10 + q5_12) / 3,
+#                neuroticism = (q22_45 + q22_46 + q22_47) /3, extraversion = (q22_48 + q22_49 + q22_50)/3,
+#                openness = (q22_51 + q22_52 + q22_53)/3, agreeableness = (q22_54 + q22_55 + q22_56)/3,
+#                conscientiousness= (q22_57 + q22_58 + q22_59)/3,
+#                need_for_cognition = (q20_19 + q20_20 + q20_21 + q20_22 + q20_23)/5,
+#                faith_in_intuition = (q20_24 + q20_25 + q20_26 + q20_27 + q20_28)/5,
+#                time_pressures = (q36_2 + q36_3)/2, reliance_on_dr = (q36_1 + q36_8)/2,
+#                pharmacist_restriction = (q36_6 + q36_7)/2, side_effects = (q36_4 + q36_5)/2,
+#                trad_role = (q37_1 + q37_2 + q37_3 + q37_4 + q37_5)/5,
+#                new_role = (q37_7 + q37_8 + q37_9 + q37_10)/4)
+
+#calculate new variables as POMP scoes
+pers <- mutate(pers, mastery_approach = ((q5_1 + q5_3 + q5_7) / 3 - 1 ) / 4 * 100, 
+               mastery_avoidance = ((q5_5 + q5_9 + q5_11) / 3 - 1 ) / 4 * 100, 
+               performance_approach = ((q5_2 + q5_4 + q5_8) / 3 - 1 ) / 4 * 100, 
+               performance_avoidance = ((q5_6 + q5_10 + q5_12) / 3 - 1 ) / 4 * 100,
+               neuroticism = ((q22_45 + q22_46 + q22_47) /3 - 1 ) / 6 * 100, 
+               extraversion = ((q22_48 + q22_49 + q22_50)/3 - 1 ) / 6 * 100,
+               openness = ((q22_51 + q22_52 + q22_53)/3 - 1 ) / 6 *100, 
+               agreeableness = ((q22_54 + q22_55 + q22_56)/3 - 1 ) / 6 * 100,
+               conscientiousness= ((q22_57 + q22_58 + q22_59)/3 - 1 ) / 6 * 100,
+               need_for_cognition = ((q20_19 + q20_20 + q20_21 + q20_22 + q20_23)/5 - 1) / 4 * 100,
+               faith_in_intuition = ((q20_24 + q20_25 + q20_26 + q20_27 + q20_28)/5 - 1) / 4 * 100,
+               time_pressures = ((q36_2 + q36_3)/2 - 1 ) / 6 * 100, 
+               reliance_on_dr = ((q36_1 + q36_8)/2 - 1 ) / 6 * 100,
+               pharmacist_restriction = ((q36_6 + q36_7)/2 - 1 ) / 6 * 100, 
+               side_effects = ((q36_4 + q36_5)/2 - 1 ) / 6 * 100,
+               trad_role = ((q37_1 + q37_2 + q37_3 + q37_4 + q37_5)/5 - 1) / 2 *100,
+               new_role = ((q37_7 + q37_8 + q37_9 + q37_10)/4 - 1) / 2 *100)
+               
+save(pers, file = "pers3.Rdata")               
+
+# p2.data <- select(pers, -id, -q38, -q20)
+# save(p2.data, file = "dhanya_p2.Rdata")
+# write.csv(p2.data, file = "dhanya_p2.csv")
+```
+
+#Achievement Goals Questionnaire Revised
+
+Fit seems good, RMSEA ~.059
+Omega reliabilities are acceptable (>.74)
+
+
+```{r}
+agr.model1 <- '
+# latent variable definitions
+mastery_approach =~ q5_1 + q5_3 + q5_7
+mastery_avoidance =~ q5_5 + q5_9 + q5_11
+performance_approach =~ q5_2 + q5_4 + q5_8
+performance_avoidance =~ q5_6 + q5_10 + q5_12
+'
+agr.fit1 <- cfa(agr.model1, data=pers)
+summary(agr.fit1, fit.measures = TRUE, standardized = TRUE)
+ # standardizedSolution(agr.fit1)
+ 
+select(pers, q5_1, q5_3, q5_7) %>%
+  omega(nfactors = 1) #.74
+
+select(pers, q5_5, q5_9, q5_11) %>%
+  omega(nfactors = 1) #.74
+
+select(pers, q5_2, q5_4, q5_8) %>%
+  omega(nfactors = 1) #.84
+
+select(pers, q5_6, q5_10, q5_12) %>%
+  omega(nfactors = 1) #.87
+
+save(pers, file = "pers3.Rdata")
+```
+
+#Big Five
+
+Fit not great, but OK, RMSEA ~.082
+Reverse scored items generally weaker loadings
+Omega reliabilities are acceptable (>.60). Generally better than reported in the source paper (Lang et al., 2011)
+
+
+```{r}
+bfi.model1 <- '
+# latent variable definitions
+neuroticism =~ q22_45 + q22_46 + q22_47
+extraversion =~ q22_48 + q22_49 + q22_50
+openness =~ q22_51 + q22_52 + q22_53
+agreeableness =~ q22_54 + q22_55 + q22_56
+conscientiousness=~ q22_57 + q22_58 + q22_59
+'
+bfi.fit1 <- cfa(bfi.model1, data=pers)
+summary(bfi.fit1, fit.measures = TRUE, standardized = TRUE)
+ # standardizedSolution(bfi.fit1)
+ 
+select(pers, q22_45, q22_46, q22_47) %>%
+  omega(nfactors = 1) #.76
+
+select(pers, q22_48, q22_49, q22_50) %>%
+  omega(nfactors = 1) #.79
+
+select(pers, q22_51, q22_52, q22_53) %>%
+  omega(nfactors = 1) #.71
+
+select(pers, q22_54, q22_55, q22_56) %>%
+  omega(nfactors = 1) #.61
+
+select(pers, q22_57, q22_58, q22_59) %>%
+  omega(nfactors = 1) #.60
+```
+
+#Rational Experiential Inventory
+
+Fit not great, but OK, RMSEA ~.076
+Q23 weak loading on NFC, but fit worse without Q23
+Omega reliabilities are good (>.80). 
+
+
+```{r}
+rei.model1 <- '
+# latent variable definitions
+need_for_cognition =~ q20_19 + q20_20 + q20_21 + q20_22 + q20_23
+faith_in_intuition =~ q20_24 + q20_25 + q20_26 + q20_27 + q20_28
+'
+rei.fit1 <- cfa(rei.model1, data=pers)
+summary(rei.fit1, fit.measures = TRUE, standardized = TRUE)
+ # standardizedSolution(rei.fit1)
+ 
+rei.model2 <- '
+# latent variable definitions, with no Q23
+need_for_cognition =~ q20_19 + q20_20 + q20_21 + q20_22 
+faith_in_intuition =~ q20_24 + q20_25 + q20_26 + q20_27 + q20_28
+'
+rei.fit2 <- cfa(rei.model2, data=pers)
+summary(rei.fit2, fit.measures = TRUE, standardized = TRUE)
+ 
+select(pers, q20_19:q20_23) %>%
+  omega(nfactors = 3, fm = "ml") #.78
+
+select(pers, q20_19:q20_22) %>%
+  omega(nfactors = 3, fm = "ml") #.79 DROPPING Q23 has little impact on reliability
+
+select(pers, q20_24:q20_28) %>%
+  omega(nfactors = 3, fm = "ml") #.82
+```
+
+#Counselor Role Orientation
+
+Fit good, RMSEA ~.052; better without side-effect factor
+But reliabilities low.
+
+
+```{r}
+cro.model1 <- '
+# latent variable definitions
+time pressures =~ q36_2 + q36_3
+reliance_on_dr =~ q36_1 + q36_8
+pharmacist_restriction =~ q36_6 + q36_7
+side_effects =~ q36_4 + q36_5
+'
+cro.fit1 <- cfa(cro.model1, data=pers)
+summary(cro.fit1, fit.measures = TRUE, standardized = TRUE)
+ # standardizedSolution(rei.fit1)
+ 
+cro.model2 <- '
+# latent variable definitions
+time pressures =~ q36_2 + q36_3
+reliance_on_dr =~ q36_1 + q36_8
+pharmacist_restriction =~ q36_6 + q36_7
+'
+cro.fit2 <- cfa(cro.model2, data=pers)
+summary(cro.fit2, fit.measures = TRUE, standardized = TRUE)
+ 
+select(pers, q36_2, q36_3) %>%
+  omega(nfactors = 1) #.48
+
+select(pers, q36_1, q36_8) %>%
+  omega(nfactors = 1) #.41
+
+select(pers, q36_6, q36_7) %>%
+  omega(nfactors = 1) #.57
+```
+
+
+```{r}
+ph.att <- select(pers, q37_1:q37_10)
+
+vss(ph.att, fm = "mle")
+
+fa.parallel(ph.att, fm = "ml")
+
+ph.att.fit <- principal(ph.att, nfactors=2, rotate="oblimin")
+ph.att.fit
+
+ph.att.fit2 <- factanal(ph.att, 2, rotation="oblimin")
+print(fit, digits=2, cutoff=.3, sort=TRUE)
+```
+
